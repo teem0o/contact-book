@@ -29,17 +29,20 @@ public class ContactInfoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ContactInfoResponse> getContactInfoById(@NonNull HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<ContactInfoResponse> getContactInfoById(@NonNull HttpServletRequest request,
+                                                                  @PathVariable Long id) {
         return ResponseEntity.ok(contactInfoService.getContactInfoById(request, id));
     }
 
     @PostMapping
-    public ResponseEntity<ContactInfoResponse> createContactInfo(@NonNull HttpServletRequest request, @RequestBody ContactInfoRequest contactInfoRequest) {
+    public ResponseEntity<ContactInfoResponse> createContactInfo(@NonNull HttpServletRequest request,
+                                                                 @RequestBody ContactInfoRequest contactInfoRequest) {
         return ResponseEntity.ok(contactInfoService.createContactInfo(request, contactInfoRequest));
     }
 
     @PutMapping
-    public ResponseEntity<ContactInfoResponse> updateContactInfo(@NonNull HttpServletRequest request, @RequestBody ContactInfoRequest contactInfoRequest) {
+    public ResponseEntity<ContactInfoResponse> updateContactInfo(@NonNull HttpServletRequest request,
+                                                                 @RequestBody ContactInfoRequest contactInfoRequest) {
         return ResponseEntity.ok(contactInfoService.updateContactInfo(request, contactInfoRequest));
     }
 

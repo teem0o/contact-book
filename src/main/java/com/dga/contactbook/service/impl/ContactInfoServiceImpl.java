@@ -4,6 +4,8 @@ import com.dga.contactbook.dto.ContactInfoRequest;
 import com.dga.contactbook.dto.ContactInfoResponse;
 import com.dga.contactbook.entity.ContactInfo;
 import com.dga.contactbook.entity.User;
+import com.dga.contactbook.exception.ContactInfoNotFoundException;
+import com.dga.contactbook.exception.ContactInfoPermissionException;
 import com.dga.contactbook.repository.ContactInfoRepository;
 import com.dga.contactbook.repository.UserRepository;
 import com.dga.contactbook.security.JWTService;
@@ -40,8 +42,9 @@ public class ContactInfoServiceImpl implements ContactInfoService {
 
     @Override
     public ContactInfoResponse getContactInfoById(HttpServletRequest request, Long id) {
-        checkAuthority(id, request, "You are not authorized to get this contact info");
-        return contactInfoRepository.findById(id).map(ci -> modelMapper.map(ci, ContactInfoResponse.class)).orElseThrow(() -> new RuntimeException("Contact Info not found"));
+        checkAuthority(id, request, "get");
+        return contactInfoRepository.findById(id).map(ci -> modelMapper.map(ci, ContactInfoResponse.class))
+                .orElseThrow(() -> new ContactInfoNotFoundException(id));
     }
 
     @Override
@@ -56,7 +59,8 @@ public class ContactInfoServiceImpl implements ContactInfoService {
 
     @Override
     public ContactInfoResponse updateContactInfo(HttpServletRequest request, ContactInfoRequest contactInfoRequest) {
-        var contactInfo = checkAuthority(contactInfoRequest.getId(), request, "You are not authorized to update this contact info");
+        var contactInfo = checkAuthority(contactInfoRequest.getId(),
+                request, "update");
         modelMapper.map(contactInfoRequest, contactInfo);
         contactInfoRepository.save(contactInfo);
         return modelMapper.map(contactInfo, ContactInfoResponse.class);
@@ -65,16 +69,17 @@ public class ContactInfoServiceImpl implements ContactInfoService {
 
     @Override
     public void deleteContactInfo(HttpServletRequest request, Long id) {
-        checkAuthority(id, request, "You are not authorized to delete this contact info");
+        checkAuthority(id, request, "delete");
         contactInfoRepository.deleteById(id);
     }
 
-    private ContactInfo checkAuthority(Long id, HttpServletRequest request, String message) {
-        var contactInfo = contactInfoRepository.findById(id).orElseThrow(() -> new RuntimeException("Contact Info not found"));
+    private ContactInfo checkAuthority(Long id, HttpServletRequest request, String actionType) {
+        var contactInfo = contactInfoRepository.findById(id)
+                .orElseThrow(() -> new ContactInfoNotFoundException(id));
         var username = getUserName(request);
         var user = modelMapper.map(userRepository.findByUsername(username), User.class);
         if (!user.getId().equals(contactInfo.getUser().getId())) {
-            throw new RuntimeException(message);
+            throw new ContactInfoPermissionException(actionType, id);
         }
         return contactInfo;
     }
